@@ -8,26 +8,37 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
-  Image,
+  Image, 
   ActivityIndicator,
 } from 'react-native';
 import NetInfo from '@react-native-community/netinfo';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { Picker } from '@react-native-picker/picker';
+import { useNavigation, useRoute } from '@react-navigation/native';
 
-const VisitorAccessScreen = ({ route, navigation }) => {
-  const { employeeCodeIdFromPreviousScreen } = route.params || {}; // Receive data from DeviceEnrollmentScreen
+const LOCATIONS = ['Nkana', 'Mufulira'];
+const SHAFTS = ['SOB', 'Central Shaft', 'MSV', 'SYNC'];
+const PRIORITIES = ['Urgent', 'High', 'Low'];
+
+const VisitorAccessScreen = () => {
+  const navigation = useNavigation();
+  const route = useRoute();
+  const { employeeCodeIdFromPreviousScreen } = route.params || {};
 
   const [visitHeaders, setVisitHeaders] = useState([
     {
+<<<<<<< HEAD
       id: Date.now().toString(), // Ensure each item has a unique id for rendering purposes
+=======
+      id: Date.now().toString(),
+>>>>>>> af6c3b5 (updatee)
       employeeCode: employeeCodeIdFromPreviousScreen || '',
       deviceId: '',
       visitDate: new Date(),
       entryTime: new Date(),
       exitTime: new Date(),
       comment: '',
-      transactionDate: new Date().toISOString(),
       isSync: false,
       dateSync: '',
       visitDetails: [
@@ -39,17 +50,17 @@ const VisitorAccessScreen = ({ route, navigation }) => {
           fullComment: '',
           imagePath: '',
           transactionDate: new Date().toISOString(),
-          employeeCode: employeeCodeIdFromPreviousScreen || '', // Include employeeCode in visit details
+          employeeCode: employeeCodeIdFromPreviousScreen || '',
         },
       ],
     },
   ]);
+  const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
-  const [showVisitDatePicker, setShowVisitDatePicker] = useState(false);
-  const [showEntryTimePicker, setShowEntryTimePicker] = useState(false);
-  const [showExitTimePicker, setShowExitTimePicker] = useState(false);
+  const [showVisitDatePicker, setShowVisitDatePicker] = useState({});
+  const [showEntryTimePicker, setShowEntryTimePicker] = useState({});
+  const [showExitTimePicker, setShowExitTimePicker] = useState({});
 
-  // Auto-generate deviceId and check network status when component mounts
   useEffect(() => {
     const initializeDeviceId = async () => {
       try {
@@ -63,8 +74,8 @@ const VisitorAccessScreen = ({ route, navigation }) => {
           prevHeaders.map((header) => ({
             ...header,
             deviceId,
-            isSync: state.isConnected, // Set isSync based on network status
-            dateSync: state.isConnected ? new Date().toISOString() : '', // Set dateSync if connected
+            isSync: state.isConnected,
+            dateSync: state.isConnected ? new Date().toISOString() : '',
           }))
         );
       } catch (error) {
@@ -75,22 +86,29 @@ const VisitorAccessScreen = ({ route, navigation }) => {
     initializeDeviceId();
   }, []);
 
-  const validateHeader = (header) => {
-    const { employeeCode, deviceId, visitDate, entryTime } = header;
-    console.log('Validating Header:', { employeeCode, deviceId, visitDate, entryTime });
-    return employeeCode && deviceId && visitDate && entryTime;
-  };
-
-  const validateDetails = (details) => {
-    return details.every(({ location, category, priority, shaft }) => {
-      console.log('Validating Detail:', { location, category, priority, shaft });
-      return location && category && priority && shaft;
+  const validateFields = () => {
+    const newErrors = {};
+    visitHeaders.forEach((header, index) => {
+      if (!header.deviceId) newErrors[`deviceId_${index}`] = 'Device ID is required';
+      header.visitDetails.forEach((detail, detailIndex) => {
+        if (!detail.category) newErrors[`category_${index}_${detailIndex}`] = 'Category is required';
+        if (!detail.priority) newErrors[`priority_${index}_${detailIndex}`] = 'Priority is required';
+        if (!detail.shaft) newErrors[`shaft_${index}_${detailIndex}`] = 'Shaft is required';
+        if (!detail.location) newErrors[`location_${index}_${detailIndex}`] = 'Location is required';
+      });
     });
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSave = async () => {
+    if (!validateFields()) {
+      Alert.alert('Validation Error', 'Please fill in all required fields.');
+      return;
+    }
     setLoading(true);
 
+<<<<<<< HEAD
     for (const header of visitHeaders) {
       if (!validateHeader(header) || !validateDetails(header.visitDetails)) {
         Alert.alert(
@@ -117,6 +135,8 @@ const VisitorAccessScreen = ({ route, navigation }) => {
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
+=======
+>>>>>>> af6c3b5 (updatee)
     try {
       const storedVisits = await AsyncStorage.getItem('visitHistory');
       const visits = storedVisits ? JSON.parse(storedVisits) : [];
@@ -175,7 +195,22 @@ const VisitorAccessScreen = ({ route, navigation }) => {
 
         visits.push(headerPayload);
       }
+<<<<<<< HEAD
  const handleHeaderChange = (id, field, value) => {
+=======
+
+      await AsyncStorage.setItem('visitHistory', JSON.stringify(visits));
+      Alert.alert('Success', 'Visit details saved successfully.');
+      navigation.replace('Visitors', { employeeCodeIdFromPreviousScreen });
+    } catch (error) {
+      Alert.alert('Error', error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleHeaderChange = (id, field, value) => {
+>>>>>>> af6c3b5 (updatee)
     setVisitHeaders((prevHeaders) =>
       prevHeaders.map((header) => (header.id === id ? { ...header, [field]: value } : header))
     );
@@ -197,9 +232,9 @@ const VisitorAccessScreen = ({ route, navigation }) => {
   };
   const onDateChange = (event, selectedDate, type, headerId) => {
     const currentDate = selectedDate || new Date();
-    setShowVisitDatePicker(false);
-    setShowEntryTimePicker(false);
-    setShowExitTimePicker(false);
+    setShowVisitDatePicker((prev) => ({ ...prev, [headerId]: false }));
+    setShowEntryTimePicker((prev) => ({ ...prev, [headerId]: false }));
+    setShowExitTimePicker((prev) => ({ ...prev, [headerId]: false }));
 
     if (type === 'visitDate') {
       handleHeaderChange(headerId, 'visitDate', currentDate);
@@ -210,13 +245,8 @@ const VisitorAccessScreen = ({ route, navigation }) => {
     }
   };
 
-  const formatDate = (date) => {
-    return date ? new Date(date).toLocaleDateString('en-GB') : '';
-  };
-
-  const formatTime = (date) => {
-    return date ? new Date(date).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : '';
-  };
+  const formatDate = (date) => (date ? new Date(date).toLocaleDateString('en-GB') : '');
+  const formatTime = (date) => (date ? new Date(date).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : '');
 
   const renderVisitDetails = (headerId, visitDetails) => (
     <View style={styles.detailsContainer}>
@@ -412,7 +442,11 @@ const VisitorAccessScreen = ({ route, navigation }) => {
 
 
 const styles = StyleSheet.create({
+<<<<<<< HEAD
  container: { flex: 1, backgroundColor: '#f9f9f9', padding: 20 },
+=======
+  container: { flex: 1, backgroundColor: '#f9f9f9', padding: 20 },
+>>>>>>> af6c3b5 (updatee)
   headerBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'forestgreen', padding: 15, borderRadius: 10 },
   logo: { width: 40, height: 50, marginRight: 10 },
   headerTitle: { color: 'white', fontSize: 22, fontWeight: 'bold' },
@@ -428,7 +462,11 @@ const styles = StyleSheet.create({
   inputLabel: { fontSize: 14, fontWeight: '600', color: '#333', marginBottom: 8, marginTop: 8 },
   detailItem: { marginBottom: 24 },
   errorInput: { borderColor: 'red', backgroundColor: '#fff0f0' },
+<<<<<<< HEAD
   errorText: { color: 'red', fontSize: 12, marginBottom: 12, marginLeft: 4 }, 
+=======
+  errorText: { color: 'red', fontSize: 12, marginBottom: 12, marginLeft: 4 },
+>>>>>>> af6c3b5 (updatee)
 });
 
 export default VisitorAccessScreen;

@@ -19,7 +19,8 @@
         "image": "./assets/images/splashimage.png",
         "resizeMode": "cover",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "bundleIdentifier": "com.benjamin99.uvtapp"
     },
     "android": {
       "adaptiveIcon": {

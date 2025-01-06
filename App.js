@@ -1,7 +1,13 @@
-import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, View, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import VisitorAccessScreen from './app/VisitorAccessScreen';
+import DeviceEnrollmentScreen from './app/DeviceEnrollmentScreen';
+import VisitorsScreen from './app/VisitorsScreen';
+import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Layout from './app/_layout';
+
+const Stack = createStackNavigator();
 
 const App = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -11,11 +17,9 @@ const App = () => {
     const checkEnrollmentStatus = async () => {
       try {
         const enrollmentData = await AsyncStorage.getItem('deviceEnrollment');
-        if (enrollmentData) {
-          setIsEnrolled(true);
-        }
+        setIsEnrolled(!!enrollmentData);
       } catch (error) {
-        console.error('Error reading enrollment data', error);
+        console.error('Error checking enrollment status:', error);
       } finally {
         setIsLoading(false);
       }
@@ -32,7 +36,31 @@ const App = () => {
     );
   }
 
-  return <Layout isEnrolled={isEnrolled} />;
+  return (
+    <NavigationContainer>
+      <Stack.Navigator 
+        initialRouteName={isEnrolled ? "Visitors" : "DeviceEnrollment"}
+        screenOptions={{ 
+          headerShown: false,
+          animationEnabled: true,
+          gestureEnabled: false 
+        }}
+      >
+        <Stack.Screen 
+          name="DeviceEnrollment" 
+          component={DeviceEnrollmentScreen} 
+        />
+        <Stack.Screen 
+          name="VisitorAccess" 
+          component={VisitorAccessScreen} 
+        />
+        <Stack.Screen 
+          name="Visitors" 
+          component={VisitorsScreen} 
+        />
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
 };
 
 const styles = StyleSheet.create({
