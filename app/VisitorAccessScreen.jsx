@@ -21,6 +21,7 @@ const VisitorAccessScreen = ({ route, navigation }) => {
   const [visitHeaders, setVisitHeaders] = useState([
     {
       id: Date.now().toString(), // Ensure each item has a unique id for rendering purposes
+      employeeCode: employeeCodeIdFromPreviousScreen || '',
       deviceId: '',
       visitDate: new Date(),
       entryTime: new Date(),
@@ -97,53 +98,86 @@ const VisitorAccessScreen = ({ route, navigation }) => {
           'Please fill in all required fields in headers and details.'
         );
         setLoading(false);
+         navigation.replace('VisitorsScreen', { 
+        employeeCodeIdFromPreviousScreen: employeeCode.trim() 
+      });
         return;
-      }
+      }  
+    const validateFields = () => {
+    const newErrors = {};
+    visitHeaders.forEach((header, index) => {
+      if (!header.deviceId) newErrors[`deviceId_${index}`] = 'Device ID is required';
+      header.visitDetails.forEach((detail, detailIndex) => {
+        if (!detail.category) newErrors[`category_${index}_${detailIndex}`] = 'Category is required';
+        if (!detail.priority) newErrors[`priority_${index}_${detailIndex}`] = 'Priority is required';
+        if (!detail.shaft) newErrors[`shaft_${index}_${detailIndex}`] = 'Shaft is required';
+        if (!detail.location) newErrors[`location_${index}_${detailIndex}`] = 'Location is required';
+      });
+    });
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+    try {
+      const storedVisits = await AsyncStorage.getItem('visitHistory');
+      const visits = storedVisits ? JSON.parse(storedVisits) : [];
 
-      try {
-        // Ensure transactionDate is updated before sending data
-        const updatedHeader = {
-          ...header,
-          transactionDate: new Date().toISOString(),
-          visitDetails: header.visitDetails.map(detail => ({
-            ...detail,
+      for (const header of visitHeaders) {
+        for (const detail of header.visitDetails) {
+          const detailPayload = {
+            category: detail.category,
+            priority: detail.priority,
+            shaft: detail.shaft,
+            location: detail.location,
+            fullComment: detail.fullComment,
+            imagePath: detail.imagePath,
             transactionDate: new Date().toISOString(),
-          })),
+            employeeCode: detail.employeeCode || header.employeeCode,
+          };
+
+          const detailsResponse = await fetch('https://223e-41-77-146-22.ngrok-free.app/api/VisitDetails', {
+            method: 'POST',
+            headers: {
+              accept: 'text/plain',
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(detailPayload),
+          });
+
+          if (!detailsResponse.ok) {
+            throw new Error('Failed to save visit detail');
+          }
+        }
+
+        const headerPayload = {
+          deviceId: header.deviceId,
+          visitDate: header.visitDate.toISOString(),
+          entryTime: header.entryTime.toISOString(),
+          exitTime: header.exitTime.toISOString(),
+          comment: header.comment,
+          transactionDate: new Date().toISOString(),
+          isSync: true,
+          dateSync: new Date().toISOString(),
+          employeeCode: header.employeeCode,
         };
 
-        // Send visit header data without the id
-        const { id, ...headerData } = updatedHeader;
-        const headerResponse = await fetch('http://localhost:5295/api/VisitHeaders', {
+        const headerResponse = await fetch('https://223e-41-77-146-22.ngrok-free.app/api/VisitHeader', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(headerData),
+          headers: {
+            accept: 'text/plain',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(headerPayload),
         });
 
-        if (!headerResponse.ok) throw new Error('Failed to save visit header.');
+        if (!headerResponse.ok) {
+          throw new Error('Failed to save visit header');
+        }
 
-        // Send visit details data
-        const detailsResponse = await fetch('http://localhost:5295/api/VisitDetails', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(updatedHeader.visitDetails),
-        });
-
-        if (!detailsResponse.ok) throw new Error('Failed to save visit details.');
-
-        Alert.alert('Success', 'Data saved successfully!');
-      } catch (error) {
-        Alert.alert('Error', error.message);
+        visits.push(headerPayload);
       }
-    }
-
-    setLoading(false);
-  };
-
-  const handleHeaderChange = (id, field, value) => {
+ const handleHeaderChange = (id, field, value) => {
     setVisitHeaders((prevHeaders) =>
-      prevHeaders.map((header) =>
-        header.id === id ? { ...header, [field]: value } : header
-      )
+      prevHeaders.map((header) => (header.id === id ? { ...header, [field]: value } : header))
     );
   };
 
@@ -161,7 +195,6 @@ const VisitorAccessScreen = ({ route, navigation }) => {
       )
     );
   };
-
   const onDateChange = (event, selectedDate, type, headerId) => {
     const currentDate = selectedDate || new Date();
     setShowVisitDatePicker(false);
@@ -189,53 +222,76 @@ const VisitorAccessScreen = ({ route, navigation }) => {
     <View style={styles.detailsContainer}>
       {visitDetails.map((detail, index) => (
         <View key={index} style={styles.detailItem}>
+          <Text style={styles.inputLabel}>Category</Text>
           <TextInput
-            style={styles.input}
-            value={detail.location}
-            onChangeText={(value) =>
-              handleDetailChange(headerId, index, 'location', value)
-            }
-            placeholder="Location"
-          />
-          <TextInput
-            style={styles.input}
+            style={[styles.input, errors[`category_${headerId}_${index}`] && styles.errorInput]}
             value={detail.category}
-            onChangeText={(value) =>
-              handleDetailChange(headerId, index, 'category', value)
-            }
-            placeholder="Category"
+            onChangeText={(value) => handleDetailChange(headerId, index, 'category', value)}
+            placeholder="Enter Category"
           />
-          <TextInput
-            style={styles.input}
-            value={detail.priority}
-            onChangeText={(value) =>
-              handleDetailChange(headerId, index, 'priority', value)
-            }
-            placeholder="Priority"
-          />
-          <TextInput
-            style={styles.input}
-            value={detail.shaft}
-            onChangeText={(value) =>
-              handleDetailChange(headerId, index, 'shaft', value)
-            }
-            placeholder="Shaft"
-          />
+          {errors[`category_${headerId}_${index}`] && <Text style={styles.errorText}>{errors[`category_${headerId}_${index}`]}</Text>}
+          
+          <Text style={styles.inputLabel}>Priority</Text>
+          <View style={[styles.pickerContainer, errors[`priority_${headerId}_${index}`] && styles.errorInput]}>
+            <Picker
+              style={styles.picker}
+              selectedValue={detail.priority}
+              onValueChange={(value) => handleDetailChange(headerId, index, 'priority', value)}
+            >
+              <Picker.Item label="Select Priority" value="" />
+              {PRIORITIES.map((priority) => (
+                <Picker.Item key={priority} label={priority} value={priority} />
+              ))}
+            </Picker>
+          </View>
+          {errors[`priority_${headerId}_${index}`] && <Text style={styles.errorText}>{errors[`priority_${headerId}_${index}`]}</Text>}
+
+          <Text style={styles.inputLabel}>Shaft</Text>
+          <View style={[styles.pickerContainer, errors[`shaft_${headerId}_${index}`] && styles.errorInput]}>
+            <Picker
+              style={styles.picker}
+              selectedValue={detail.shaft}
+              onValueChange={(value) => handleDetailChange(headerId, index, 'shaft', value)}
+            >
+              <Picker.Item label="Select Shaft" value="" />
+              {SHAFTS.map((shaft) => (
+                <Picker.Item key={shaft} label={shaft} value={shaft} />
+              ))}
+            </Picker>
+          </View>
+          {errors[`shaft_${headerId}_${index}`] && <Text style={styles.errorText}>{errors[`shaft_${headerId}_${index}`]}</Text>}
+
+          <Text style={styles.inputLabel}>Location</Text>
+          <View style={[styles.pickerContainer, errors[`location_${headerId}_${index}`] && styles.errorInput]}>
+            <Picker
+              style={styles.picker}
+              selectedValue={detail.location}
+              onValueChange={(value) => handleDetailChange(headerId, index, 'location', value)}
+            >
+              <Picker.Item label="Select Location" value="" />
+              {LOCATIONS.map((location) => (
+                <Picker.Item key={location} label={location} value={location} />
+              ))}
+            </Picker>
+          </View>
+          {errors[`location_${headerId}_${index}`] && <Text style={styles.errorText}>{errors[`location_${headerId}_${index}`]}</Text>}
+
+          <Text style={styles.inputLabel}>Full Comment</Text>
           <TextInput
             style={styles.input}
             value={detail.fullComment}
-            onChangeText={(value) =>
-              handleDetailChange(headerId, index, 'fullComment', value)
-            }
-            placeholder="Full Comment"
+            onChangeText={(value) => handleDetailChange(headerId, index, 'fullComment', value)}
+            placeholder="Enter Full Comment"
+            multiline
+            numberOfLines={3}
           />
+
+          <Text style={styles.inputLabel}>Image Path</Text>
           <TextInput
             style={styles.input}
             value={detail.imagePath}
-            onChangeText={(value) =>
-              handleDetailChange(headerId, index, 'imagePath', value)
-            }
-            placeholder="Image Path"
+            onChangeText={(value) => handleDetailChange(headerId, index, 'imagePath', value)}
+            placeholder="Enter Image Path"
           />
         </View>
       ))}
@@ -243,20 +299,28 @@ const VisitorAccessScreen = ({ route, navigation }) => {
   );
 
   const renderVisitHeader = ({ item }) => (
-    <View style={styles.headerContainer}>
+    <View style={styles.detailsContainer}>
+      <Text style={styles.inputLabel}>Employee Code</Text>
       <TextInput
-        style={styles.input}
+        style={[styles.input, errors[`employeeCode_${item.id}`] && styles.errorInput]}
         value={item.employeeCode}
-        editable={false} // Pre-filled from previous screen
+        onChangeText={(value) => handleHeaderChange(item.id, 'employeeCode', value)}
         placeholder="Employee Code"
+        editable={false}
       />
+      {errors[`employeeCode_${item.id}`] && <Text style={styles.errorText}>{errors[`employeeCode_${item.id}`]}</Text>}
+
+      <Text style={styles.inputLabel}>Device ID</Text>
       <TextInput
-        style={styles.input}
+        style={[styles.input, errors[`deviceId_${item.id}`] && styles.errorInput]}
         value={item.deviceId}
-        editable={false} // Auto-generated Device ID
+        editable={false}
         placeholder="Device ID"
       />
-      <TouchableOpacity onPress={() => setShowVisitDatePicker(true)}>
+      {errors[`deviceId_${item.id}`] && <Text style={styles.errorText}>{errors[`deviceId_${item.id}`]}</Text>}
+
+      <Text style={styles.inputLabel}>Visit Date</Text>
+      <TouchableOpacity onPress={() => setShowVisitDatePicker((prev) => ({ ...prev, [item.id]: true }))}>
         <TextInput
           style={styles.input}
           value={formatDate(item.visitDate)}
@@ -265,7 +329,7 @@ const VisitorAccessScreen = ({ route, navigation }) => {
           editable={false}
         />
       </TouchableOpacity>
-      {showVisitDatePicker && (
+      {showVisitDatePicker[item.id] && (
         <DateTimePicker
           value={item.visitDate}
           mode="date"
@@ -273,7 +337,9 @@ const VisitorAccessScreen = ({ route, navigation }) => {
           onChange={(event, date) => onDateChange(event, date, 'visitDate', item.id)}
         />
       )}
-      <TouchableOpacity onPress={() => setShowEntryTimePicker(true)}>
+
+      <Text style={styles.inputLabel}>Entry Time</Text>
+      <TouchableOpacity onPress={() => setShowEntryTimePicker((prev) => ({ ...prev, [item.id]: true }))}>
         <TextInput
           style={styles.input}
           value={formatTime(item.entryTime)}
@@ -282,7 +348,7 @@ const VisitorAccessScreen = ({ route, navigation }) => {
           editable={false}
         />
       </TouchableOpacity>
-      {showEntryTimePicker && (
+      {showEntryTimePicker[item.id] && (
         <DateTimePicker
           value={item.entryTime}
           mode="time"
@@ -290,7 +356,9 @@ const VisitorAccessScreen = ({ route, navigation }) => {
           onChange={(event, date) => onDateChange(event, date, 'entryTime', item.id)}
         />
       )}
-      <TouchableOpacity onPress={() => setShowExitTimePicker(true)}>
+
+      <Text style={styles.inputLabel}>Exit Time</Text>
+      <TouchableOpacity onPress={() => setShowExitTimePicker((prev) => ({ ...prev, [item.id]: true }))}>
         <TextInput
           style={styles.input}
           value={formatTime(item.exitTime)}
@@ -299,7 +367,7 @@ const VisitorAccessScreen = ({ route, navigation }) => {
           editable={false}
         />
       </TouchableOpacity>
-      {showExitTimePicker && (
+      {showExitTimePicker[item.id] && (
         <DateTimePicker
           value={item.exitTime}
           mode="time"
@@ -307,11 +375,15 @@ const VisitorAccessScreen = ({ route, navigation }) => {
           onChange={(event, date) => onDateChange(event, date, 'exitTime', item.id)}
         />
       )}
+
+      <Text style={styles.inputLabel}>Comment</Text>
       <TextInput
-        style={styles.input}
+        style={[styles.input, styles.textArea]}
         value={item.comment}
         onChangeText={(value) => handleHeaderChange(item.id, 'comment', value)}
-        placeholder="Comment"
+        placeholder="Enter Comment"
+        multiline
+        numberOfLines={3}
       />
       {renderVisitDetails(item.id, item.visitDetails)}
     </View>
@@ -320,8 +392,8 @@ const VisitorAccessScreen = ({ route, navigation }) => {
   return (
     <View style={styles.container}>
       <View style={styles.headerBar}>
-        <Image source={require('../assets/images/newlogo.png')} style={styles.logo} />
-        <Text style={styles.headerTitle}>UnderGround Visit Management</Text>
+        <Image source={require('../assets/images/newlogo.png')} style={styles.logo} resizeMode="contain" />
+        <Text style={styles.headerTitle}>Underground Visitor Management</Text>
       </View>
       <Text style={styles.screenTitle}>Visit Details</Text>
       <ScrollView>
@@ -331,30 +403,32 @@ const VisitorAccessScreen = ({ route, navigation }) => {
           renderItem={renderVisitHeader}
         />
         <TouchableOpacity style={styles.saveButton} onPress={handleSave} disabled={loading}>
-          {loading ? <ActivityIndicator size="small" color="white" /> : <Text style={styles.buttonText}>Save Changes</Text>}
+          {loading ? <ActivityIndicator size="small" color="white" /> : <Text style={styles.buttonText}>Submit</Text>}
         </TouchableOpacity>
       </ScrollView>
     </View>
   );
 };
 
+
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5' },
-  headerBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'forestgreen', padding: 15 },
+ container: { flex: 1, backgroundColor: '#f9f9f9', padding: 20 },
+  headerBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'forestgreen', padding: 15, borderRadius: 10 },
   logo: { width: 40, height: 50, marginRight: 10 },
   headerTitle: { color: 'white', fontSize: 22, fontWeight: 'bold' },
-  screenTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 20,
-    color: 'forestgreen',
-  },
-  input: { borderWidth: 1, borderColor: 'lightgreen', borderRadius: 5, padding: 10, marginBottom: 10 },
+  screenTitle: { fontSize: 20, fontWeight: 'bold', textAlign: 'center', marginBottom: 20, color: 'forestgreen' },
+  input: { borderWidth: 1, borderColor: 'lightgreen', borderRadius: 5, padding: 10, marginBottom: 10, backgroundColor: '#fff' },
+  pickerContainer: { borderWidth: 1, borderColor: 'lightgreen', borderRadius: 5, marginBottom: 16, backgroundColor: '#fff' },
+  picker: { height: 50 },
+  textArea: { height: 80, textAlignVertical: 'top' },
   saveButton: { backgroundColor: 'forestgreen', padding: 15, borderRadius: 5, alignItems: 'center', marginVertical: 20 },
   buttonText: { color: 'white', fontWeight: 'bold' },
-  headerContainer: { padding: 15, borderRadius: 8, backgroundColor: 'white', marginBottom: 15 },
-  detailsContainer: { padding: 10, backgroundColor: '#f0fff0', borderRadius: 5 },
+  headerContainer: { padding: 15, borderRadius: 8, backgroundColor: '#fff', marginBottom: 15, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 5, elevation: 3 },
+  detailsContainer: { padding: 16, backgroundColor: '#f0fff0', borderRadius: 8, marginTop: 16 },
+  inputLabel: { fontSize: 14, fontWeight: '600', color: '#333', marginBottom: 8, marginTop: 8 },
+  detailItem: { marginBottom: 24 },
+  errorInput: { borderColor: 'red', backgroundColor: '#fff0f0' },
+  errorText: { color: 'red', fontSize: 12, marginBottom: 12, marginLeft: 4 }, 
 });
 
 export default VisitorAccessScreen;
