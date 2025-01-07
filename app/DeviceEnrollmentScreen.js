@@ -224,7 +224,7 @@ const DeviceEnrollmentScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5' },
+  container: { backgroundColor: '#f5f5f5' },
   scrollContainer: { flexGrow: 1, justifyContent: 'center', padding: 16 },
   headerBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'forestgreen', padding: 16, borderRadius: 10, marginBottom: 16, elevation: 3 },
   logo: { width: 40, height: 50, marginRight: 12 },

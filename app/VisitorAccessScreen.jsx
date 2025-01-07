@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   StyleSheet,
   View,
@@ -8,37 +8,34 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
-  Image, 
+  Image,
   ActivityIndicator,
 } from 'react-native';
 import NetInfo from '@react-native-community/netinfo';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { Picker } from '@react-native-picker/picker';
-import { useNavigation, useRoute } from '@react-navigation/native';
 
-const LOCATIONS = ['Nkana', 'Mufulira'];
-const SHAFTS = ['SOB', 'Central Shaft', 'MSV', 'SYNC'];
-const PRIORITIES = ['Urgent', 'High', 'Low'];
-
-const VisitorAccessScreen = () => {
-  const navigation = useNavigation();
-  const route = useRoute();
-  const { employeeCodeIdFromPreviousScreen } = route.params || {};
+const VisitorAccessScreen = ({ route, navigation }) => {
+  const { employeeCodeIdFromPreviousScreen } = route.params || {}; // Receive data from DeviceEnrollmentScreen
 
   const [visitHeaders, setVisitHeaders] = useState([
     {
+<<<<<<< HEAD
 <<<<<<< HEAD
       id: Date.now().toString(), // Ensure each item has a unique id for rendering purposes
 =======
       id: Date.now().toString(),
 >>>>>>> af6c3b5 (updatee)
+=======
+      id: Date.now().toString(), // Ensure each item has a unique id for rendering purposes
+>>>>>>> d5e87d0 (Merge branch 'main' of https://github.com/Milanzi101/uvtapp)
       employeeCode: employeeCodeIdFromPreviousScreen || '',
       deviceId: '',
       visitDate: new Date(),
       entryTime: new Date(),
       exitTime: new Date(),
       comment: '',
+      transactionDate: new Date().toISOString(),
       isSync: false,
       dateSync: '',
       visitDetails: [
@@ -50,17 +47,18 @@ const VisitorAccessScreen = () => {
           fullComment: '',
           imagePath: '',
           transactionDate: new Date().toISOString(),
-          employeeCode: employeeCodeIdFromPreviousScreen || '',
+          employeeCode: employeeCodeIdFromPreviousScreen || '', // Include employeeCode in visit details
         },
       ],
     },
   ]);
-  const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
-  const [showVisitDatePicker, setShowVisitDatePicker] = useState({});
-  const [showEntryTimePicker, setShowEntryTimePicker] = useState({});
-  const [showExitTimePicker, setShowExitTimePicker] = useState({});
+  const [errors, setErrors] = useState({});
+  const [showVisitDatePicker, setShowVisitDatePicker] = useState(false);
+  const [showEntryTimePicker, setShowEntryTimePicker] = useState(false);
+  const [showExitTimePicker, setShowExitTimePicker] = useState(false);
 
+  // Auto-generate deviceId and check network status when component mounts
   useEffect(() => {
     const initializeDeviceId = async () => {
       try {
@@ -74,8 +72,8 @@ const VisitorAccessScreen = () => {
           prevHeaders.map((header) => ({
             ...header,
             deviceId,
-            isSync: state.isConnected,
-            dateSync: state.isConnected ? new Date().toISOString() : '',
+            isSync: state.isConnected, // Set isSync based on network status
+            dateSync: state.isConnected ? new Date().toISOString() : '', // Set dateSync if connected
           }))
         );
       } catch (error) {
@@ -85,6 +83,19 @@ const VisitorAccessScreen = () => {
 
     initializeDeviceId();
   }, []);
+
+  const validateHeader = (header) => {
+    const { employeeCode, deviceId, visitDate, entryTime } = header;
+    console.log('Validating Header:', { employeeCode, deviceId, visitDate, entryTime });
+    return employeeCode && deviceId && visitDate && entryTime;
+  };
+
+  const validateDetails = (details) => {
+    return details.every(({ location, category, priority, shaft }) => {
+      console.log('Validating Detail:', { location, category, priority, shaft });
+      return location && category && priority && shaft;
+    });
+  };
 
   const validateFields = () => {
     const newErrors = {};
@@ -106,6 +117,7 @@ const VisitorAccessScreen = () => {
       Alert.alert('Validation Error', 'Please fill in all required fields.');
       return;
     }
+
     setLoading(true);
 
 <<<<<<< HEAD
@@ -201,22 +213,29 @@ const VisitorAccessScreen = () => {
 
       await AsyncStorage.setItem('visitHistory', JSON.stringify(visits));
       Alert.alert('Success', 'Visit details saved successfully.');
-      navigation.replace('Visitors', { employeeCodeIdFromPreviousScreen });
+      navigation.replace('VisitorsScreen', {
+        employeeCodeIdFromPreviousScreen: visitHeaders[0].employeeCode.trim(),
+      });
     } catch (error) {
-      Alert.alert('Error', error.message);
+      console.error('Error saving visit details:', error);
+      Alert.alert('Error', 'Failed to save visit details.');
     } finally {
       setLoading(false);
     }
   };
 
+<<<<<<< HEAD
   const handleHeaderChange = (id, field, value) => {
 >>>>>>> af6c3b5 (updatee)
+=======
+  const handleHeaderChange = useCallback((id, field, value) => {
+>>>>>>> d5e87d0 (Merge branch 'main' of https://github.com/Milanzi101/uvtapp)
     setVisitHeaders((prevHeaders) =>
       prevHeaders.map((header) => (header.id === id ? { ...header, [field]: value } : header))
     );
-  };
+  }, []);
 
-  const handleDetailChange = (headerId, detailIndex, field, value) => {
+  const handleDetailChange = useCallback((headerId, detailIndex, field, value) => {
     setVisitHeaders((prevHeaders) =>
       prevHeaders.map((header) =>
         header.id === headerId
@@ -229,12 +248,18 @@ const VisitorAccessScreen = () => {
           : header
       )
     );
+<<<<<<< HEAD
   };
   const onDateChange = (event, selectedDate, type, headerId) => {
+=======
+  }, []);
+
+  const onDateChange = useCallback((event, selectedDate, type, headerId) => {
+>>>>>>> d5e87d0 (Merge branch 'main' of https://github.com/Milanzi101/uvtapp)
     const currentDate = selectedDate || new Date();
-    setShowVisitDatePicker((prev) => ({ ...prev, [headerId]: false }));
-    setShowEntryTimePicker((prev) => ({ ...prev, [headerId]: false }));
-    setShowExitTimePicker((prev) => ({ ...prev, [headerId]: false }));
+    setShowVisitDatePicker(false);
+    setShowEntryTimePicker(false);
+    setShowExitTimePicker(false);
 
     if (type === 'visitDate') {
       handleHeaderChange(headerId, 'visitDate', currentDate);
@@ -243,10 +268,15 @@ const VisitorAccessScreen = () => {
     } else if (type === 'exitTime') {
       handleHeaderChange(headerId, 'exitTime', currentDate);
     }
+  }, [handleHeaderChange]);
+
+  const formatDate = (date) => {
+    return date ? new Date(date).toLocaleDateString('en-GB') : '';
   };
 
-  const formatDate = (date) => (date ? new Date(date).toLocaleDateString('en-GB') : '');
-  const formatTime = (date) => (date ? new Date(date).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : '');
+  const formatTime = (date) => {
+    return date ? new Date(date).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : '';
+  };
 
   const renderVisitDetails = (headerId, visitDetails) => (
     <View style={styles.detailsContainer}>
@@ -260,50 +290,32 @@ const VisitorAccessScreen = () => {
             placeholder="Enter Category"
           />
           {errors[`category_${headerId}_${index}`] && <Text style={styles.errorText}>{errors[`category_${headerId}_${index}`]}</Text>}
-          
+
           <Text style={styles.inputLabel}>Priority</Text>
-          <View style={[styles.pickerContainer, errors[`priority_${headerId}_${index}`] && styles.errorInput]}>
-            <Picker
-              style={styles.picker}
-              selectedValue={detail.priority}
-              onValueChange={(value) => handleDetailChange(headerId, index, 'priority', value)}
-            >
-              <Picker.Item label="Select Priority" value="" />
-              {PRIORITIES.map((priority) => (
-                <Picker.Item key={priority} label={priority} value={priority} />
-              ))}
-            </Picker>
-          </View>
+          <TextInput
+            style={[styles.input, errors[`priority_${headerId}_${index}`] && styles.errorInput]}
+            value={detail.priority}
+            onChangeText={(value) => handleDetailChange(headerId, index, 'priority', value)}
+            placeholder="Enter Priority"
+          />
           {errors[`priority_${headerId}_${index}`] && <Text style={styles.errorText}>{errors[`priority_${headerId}_${index}`]}</Text>}
 
           <Text style={styles.inputLabel}>Shaft</Text>
-          <View style={[styles.pickerContainer, errors[`shaft_${headerId}_${index}`] && styles.errorInput]}>
-            <Picker
-              style={styles.picker}
-              selectedValue={detail.shaft}
-              onValueChange={(value) => handleDetailChange(headerId, index, 'shaft', value)}
-            >
-              <Picker.Item label="Select Shaft" value="" />
-              {SHAFTS.map((shaft) => (
-                <Picker.Item key={shaft} label={shaft} value={shaft} />
-              ))}
-            </Picker>
-          </View>
+          <TextInput
+            style={[styles.input, errors[`shaft_${headerId}_${index}`] && styles.errorInput]}
+            value={detail.shaft}
+            onChangeText={(value) => handleDetailChange(headerId, index, 'shaft', value)}
+            placeholder="Enter Shaft"
+          />
           {errors[`shaft_${headerId}_${index}`] && <Text style={styles.errorText}>{errors[`shaft_${headerId}_${index}`]}</Text>}
 
           <Text style={styles.inputLabel}>Location</Text>
-          <View style={[styles.pickerContainer, errors[`location_${headerId}_${index}`] && styles.errorInput]}>
-            <Picker
-              style={styles.picker}
-              selectedValue={detail.location}
-              onValueChange={(value) => handleDetailChange(headerId, index, 'location', value)}
-            >
-              <Picker.Item label="Select Location" value="" />
-              {LOCATIONS.map((location) => (
-                <Picker.Item key={location} label={location} value={location} />
-              ))}
-            </Picker>
-          </View>
+          <TextInput
+            style={[styles.input, errors[`location_${headerId}_${index}`] && styles.errorInput]}
+            value={detail.location}
+            onChangeText={(value) => handleDetailChange(headerId, index, 'location', value)}
+            placeholder="Enter Location"
+          />
           {errors[`location_${headerId}_${index}`] && <Text style={styles.errorText}>{errors[`location_${headerId}_${index}`]}</Text>}
 
           <Text style={styles.inputLabel}>Full Comment</Text>
@@ -449,7 +461,7 @@ const styles = StyleSheet.create({
 >>>>>>> af6c3b5 (updatee)
   headerBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'forestgreen', padding: 15, borderRadius: 10 },
   logo: { width: 40, height: 50, marginRight: 10 },
-  headerTitle: { color: 'white', fontSize: 22, fontWeight: 'bold',  headerTitle: { color: 'white', fontSize: 20, fontWeight: 'bold', flex: 1, flexWrap: 'wrap' }, },
+  headerTitle: { color: 'white', fontSize: 22, fontWeight: 'bold' },
   screenTitle: { fontSize: 20, fontWeight: 'bold', textAlign: 'center', marginBottom: 20, color: 'forestgreen' },
   input: { borderWidth: 1, borderColor: 'lightgreen', borderRadius: 5, padding: 10, marginBottom: 10, backgroundColor: '#fff' },
   pickerContainer: { borderWidth: 1, borderColor: 'lightgreen', borderRadius: 5, marginBottom: 16, backgroundColor: '#fff' },
@@ -463,10 +475,14 @@ const styles = StyleSheet.create({
   detailItem: { marginBottom: 24 },
   errorInput: { borderColor: 'red', backgroundColor: '#fff0f0' },
 <<<<<<< HEAD
+<<<<<<< HEAD
   errorText: { color: 'red', fontSize: 12, marginBottom: 12, marginLeft: 4 }, 
 =======
   errorText: { color: 'red', fontSize: 12, marginBottom: 12, marginLeft: 4 },
 >>>>>>> af6c3b5 (updatee)
+=======
+  errorText: { color: 'red', fontSize: 12, marginBottom: 12, marginLeft: 4 }, 
+>>>>>>> d5e87d0 (Merge branch 'main' of https://github.com/Milanzi101/uvtapp)
 });
 
 export default VisitorAccessScreen;

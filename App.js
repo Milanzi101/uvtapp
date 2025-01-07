@@ -1,13 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
-import VisitorAccessScreen from './app/VisitorAccessScreen';
-import DeviceEnrollmentScreen from './app/DeviceEnrollmentScreen';
-import VisitorsScreen from './app/VisitorsScreen';
-import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, View, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
-const Stack = createStackNavigator();
+import Layout from './app/_layout';
 
 const App = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -17,9 +11,11 @@ const App = () => {
     const checkEnrollmentStatus = async () => {
       try {
         const enrollmentData = await AsyncStorage.getItem('deviceEnrollment');
-        setIsEnrolled(!!enrollmentData);
+        if (enrollmentData) {
+          setIsEnrolled(true);
+        }
       } catch (error) {
-        console.error('Error checking enrollment status:', error);
+        console.error('Error reading enrollment data', error);
       } finally {
         setIsLoading(false);
       }
@@ -36,31 +32,7 @@ const App = () => {
     );
   }
 
-  return (
-    <NavigationContainer>
-      <Stack.Navigator 
-        initialRouteName={isEnrolled ? "VisitorsScreen" : "DeviceEnrollmentScreen"}
-        screenOptions={{ 
-          headerShown: false,
-          animationEnabled: true,
-          gestureEnabled: false 
-        }}
-      >
-        <Stack.Screen 
-          name="DeviceEnrollmentScreen" 
-          component={DeviceEnrollmentScreen} 
-        />
-        <Stack.Screen 
-          name="VisitorAccessScreen" 
-          component={VisitorAccessScreen} 
-        />
-        <Stack.Screen 
-          name="VisitorsScreen" 
-          component={VisitorsScreen} 
-        />
-      </Stack.Navigator>
-    </NavigationContainer>
-  );
+  return <Layout isEnrolled={isEnrolled} />;
 };
 
 const styles = StyleSheet.create({
