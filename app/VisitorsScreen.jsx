@@ -68,7 +68,7 @@ const VisitorsScreen = ({ route }) => {
         )}
         ListEmptyComponent={<Text style={styles.emptyText}>No visit history available.</Text>}
       />
-      <TouchableOpacity style={styles.requestButton} onPress={() => navigation.navigate('VisitorAccess', { employeeCodeIdFromPreviousScreen })}>
+      <TouchableOpacity style={styles.requestButton} onPress={() => navigation.navigate('VisitorAccessScreen', { employeeCodeIdFromPreviousScreen })}>
         <Text style={styles.buttonText}>Request Another Visit</Text>
       </TouchableOpacity>
     </View>

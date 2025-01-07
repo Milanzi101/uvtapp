@@ -449,7 +449,7 @@ const styles = StyleSheet.create({
 >>>>>>> af6c3b5 (updatee)
   headerBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'forestgreen', padding: 15, borderRadius: 10 },
   logo: { width: 40, height: 50, marginRight: 10 },
-  headerTitle: { color: 'white', fontSize: 22, fontWeight: 'bold' },
+  headerTitle: { color: 'white', fontSize: 22, fontWeight: 'bold',  headerTitle: { color: 'white', fontSize: 20, fontWeight: 'bold', flex: 1, flexWrap: 'wrap' }, },
   screenTitle: { fontSize: 20, fontWeight: 'bold', textAlign: 'center', marginBottom: 20, color: 'forestgreen' },
   input: { borderWidth: 1, borderColor: 'lightgreen', borderRadius: 5, padding: 10, marginBottom: 10, backgroundColor: '#fff' },
   pickerContainer: { borderWidth: 1, borderColor: 'lightgreen', borderRadius: 5, marginBottom: 16, backgroundColor: '#fff' },

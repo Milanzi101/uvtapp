@@ -42,7 +42,7 @@ const DeviceEnrollmentScreen = () => {
       try {
         const enrollmentData = await AsyncStorage.getItem('deviceEnrollment');
         if (enrollmentData) {
-          navigation.replace('VisitorAccess');
+          navigation.replace('VisitorAccessScreen');
         }
       } catch (error) {
         console.error('Error checking enrollment:', error);
@@ -111,7 +111,7 @@ const DeviceEnrollmentScreen = () => {
       console.error('Enrollment error:', error);
     } finally {
       setIsLoading(false);
-      navigation.replace('VisitorAccess', { 
+      navigation.replace('VisitorAccessScreen', { 
         employeeCodeIdFromPreviousScreen: employeeCode.trim() 
       });
     }
@@ -228,8 +228,8 @@ const styles = StyleSheet.create({
   scrollContainer: { flexGrow: 1, justifyContent: 'center', padding: 16 },
   headerBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'forestgreen', padding: 16, borderRadius: 10, marginBottom: 16, elevation: 3 },
   logo: { width: 40, height: 50, marginRight: 12 },
-  headerTitle: { color: 'white', fontSize: 24, fontWeight: 'bold' },
-  cardContainer: { backgroundColor: 'white', borderRadius: 8, padding: 16, elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.22, shadowRadius: 2.22 },
+  headerTitle: { color: 'white', fontSize: 20, fontWeight: 'bold', flex: 1, flexWrap: 'wrap' },
+  cardContainer: { backgroundColor: '#f0fff0', borderRadius: 8, padding: 16, elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.22, shadowRadius: 2.22 },
   sectionTitle: { fontSize: 20, fontWeight: 'bold', color: 'forestgreen', marginBottom: 20, textAlign: 'center' },
   inputLabel: { fontSize: 16, fontWeight: '600', color: '#333', marginBottom: 8 },
   input: { borderWidth: 1, borderColor: 'lightgreen', borderRadius: 5, padding: 12, marginBottom: 16, fontSize: 16, backgroundColor: 'white' },

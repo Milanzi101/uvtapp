@@ -39,7 +39,7 @@ const App = () => {
   return (
     <NavigationContainer>
       <Stack.Navigator 
-        initialRouteName={isEnrolled ? "Visitors" : "DeviceEnrollment"}
+        initialRouteName={isEnrolled ? "VisitorsScreen" : "DeviceEnrollmentScreen"}
         screenOptions={{ 
           headerShown: false,
           animationEnabled: true,
@@ -47,15 +47,15 @@ const App = () => {
         }}
       >
         <Stack.Screen 
-          name="DeviceEnrollment" 
+          name="DeviceEnrollmentScreen" 
           component={DeviceEnrollmentScreen} 
         />
         <Stack.Screen 
-          name="VisitorAccess" 
+          name="VisitorAccessScreen" 
           component={VisitorAccessScreen} 
         />
         <Stack.Screen 
-          name="Visitors" 
+          name="VisitorsScreen" 
           component={VisitorsScreen} 
         />
       </Stack.Navigator>
