@@ -42,7 +42,7 @@ const DeviceEnrollmentScreen = () => {
       try {
         const enrollmentData = await AsyncStorage.getItem('deviceEnrollment');
         if (enrollmentData) {
-          navigation.replace('VisitorAccessScreen');
+          navigation.replace('VisitorsScreen');
         }
       } catch (error) {
         console.error('Error checking enrollment:', error);
@@ -94,7 +94,7 @@ const DeviceEnrollmentScreen = () => {
 
     try {
       const response = await axios.post(
-        'https://223e-41-77-146-22.ngrok-free.app/api/DeviceUserEnrollment',
+        'https://4497-41-175-27-174.ngrok-free.app/api/DeviceUserEnrollment',
         enrollment,
         {
           timeout: 10000,
@@ -111,7 +111,7 @@ const DeviceEnrollmentScreen = () => {
       console.error('Enrollment error:', error);
     } finally {
       setIsLoading(false);
-      navigation.replace('VisitorAccessScreen', { 
+      navigation.replace('VisitorsScreen', { 
         employeeCodeIdFromPreviousScreen: employeeCode.trim() 
       });
     }

@@ -20,15 +20,7 @@ const VisitorAccessScreen = ({ route, navigation }) => {
 
   const [visitHeaders, setVisitHeaders] = useState([
     {
-<<<<<<< HEAD
-<<<<<<< HEAD
       id: Date.now().toString(), // Ensure each item has a unique id for rendering purposes
-=======
-      id: Date.now().toString(),
->>>>>>> af6c3b5 (updatee)
-=======
-      id: Date.now().toString(), // Ensure each item has a unique id for rendering purposes
->>>>>>> d5e87d0 (Merge branch 'main' of https://github.com/Milanzi101/uvtapp)
       employeeCode: employeeCodeIdFromPreviousScreen || '',
       deviceId: '',
       visitDate: new Date(),
@@ -120,35 +112,6 @@ const VisitorAccessScreen = ({ route, navigation }) => {
 
     setLoading(true);
 
-<<<<<<< HEAD
-    for (const header of visitHeaders) {
-      if (!validateHeader(header) || !validateDetails(header.visitDetails)) {
-        Alert.alert(
-          'Validation Error',
-          'Please fill in all required fields in headers and details.'
-        );
-        setLoading(false);
-         navigation.replace('VisitorsScreen', { 
-        employeeCodeIdFromPreviousScreen: employeeCode.trim() 
-      });
-        return;
-      }  
-    const validateFields = () => {
-    const newErrors = {};
-    visitHeaders.forEach((header, index) => {
-      if (!header.deviceId) newErrors[`deviceId_${index}`] = 'Device ID is required';
-      header.visitDetails.forEach((detail, detailIndex) => {
-        if (!detail.category) newErrors[`category_${index}_${detailIndex}`] = 'Category is required';
-        if (!detail.priority) newErrors[`priority_${index}_${detailIndex}`] = 'Priority is required';
-        if (!detail.shaft) newErrors[`shaft_${index}_${detailIndex}`] = 'Shaft is required';
-        if (!detail.location) newErrors[`location_${index}_${detailIndex}`] = 'Location is required';
-      });
-    });
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-=======
->>>>>>> af6c3b5 (updatee)
     try {
       const storedVisits = await AsyncStorage.getItem('visitHistory');
       const visits = storedVisits ? JSON.parse(storedVisits) : [];
@@ -207,9 +170,6 @@ const VisitorAccessScreen = ({ route, navigation }) => {
 
         visits.push(headerPayload);
       }
-<<<<<<< HEAD
- const handleHeaderChange = (id, field, value) => {
-=======
 
       await AsyncStorage.setItem('visitHistory', JSON.stringify(visits));
       Alert.alert('Success', 'Visit details saved successfully.');
@@ -224,12 +184,7 @@ const VisitorAccessScreen = ({ route, navigation }) => {
     }
   };
 
-<<<<<<< HEAD
-  const handleHeaderChange = (id, field, value) => {
->>>>>>> af6c3b5 (updatee)
-=======
   const handleHeaderChange = useCallback((id, field, value) => {
->>>>>>> d5e87d0 (Merge branch 'main' of https://github.com/Milanzi101/uvtapp)
     setVisitHeaders((prevHeaders) =>
       prevHeaders.map((header) => (header.id === id ? { ...header, [field]: value } : header))
     );
@@ -248,14 +203,9 @@ const VisitorAccessScreen = ({ route, navigation }) => {
           : header
       )
     );
-<<<<<<< HEAD
-  };
-  const onDateChange = (event, selectedDate, type, headerId) => {
-=======
   }, []);
 
   const onDateChange = useCallback((event, selectedDate, type, headerId) => {
->>>>>>> d5e87d0 (Merge branch 'main' of https://github.com/Milanzi101/uvtapp)
     const currentDate = selectedDate || new Date();
     setShowVisitDatePicker(false);
     setShowEntryTimePicker(false);
@@ -452,13 +402,8 @@ const VisitorAccessScreen = ({ route, navigation }) => {
   );
 };
 
-
 const styles = StyleSheet.create({
-<<<<<<< HEAD
- container: { flex: 1, backgroundColor: '#f9f9f9', padding: 20 },
-=======
   container: { flex: 1, backgroundColor: '#f9f9f9', padding: 20 },
->>>>>>> af6c3b5 (updatee)
   headerBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'forestgreen', padding: 15, borderRadius: 10 },
   logo: { width: 40, height: 50, marginRight: 10 },
   headerTitle: { color: 'white', fontSize: 22, fontWeight: 'bold' },
@@ -474,15 +419,7 @@ const styles = StyleSheet.create({
   inputLabel: { fontSize: 14, fontWeight: '600', color: '#333', marginBottom: 8, marginTop: 8 },
   detailItem: { marginBottom: 24 },
   errorInput: { borderColor: 'red', backgroundColor: '#fff0f0' },
-<<<<<<< HEAD
-<<<<<<< HEAD
   errorText: { color: 'red', fontSize: 12, marginBottom: 12, marginLeft: 4 }, 
-=======
-  errorText: { color: 'red', fontSize: 12, marginBottom: 12, marginLeft: 4 },
->>>>>>> af6c3b5 (updatee)
-=======
-  errorText: { color: 'red', fontSize: 12, marginBottom: 12, marginLeft: 4 }, 
->>>>>>> d5e87d0 (Merge branch 'main' of https://github.com/Milanzi101/uvtapp)
 });
 
 export default VisitorAccessScreen;
